@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "647148332959",
+    "project_id": "superm-3404a",
+    "storage_bucket": "superm-3404a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:647148332959:android:f32929ad0a4151b7217faa",
+        "android_client_info": {
+          "package_name": "com.example.moviet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "647148332959-32q1pj91orl93m7uvjavser6dvgu2hpf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcybs8PoapU7ohkWxmCjGFqp0VjUBWvG0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "647148332959-32q1pj91orl93m7uvjavser6dvgu2hpf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:647148332959:android:68886c3b90e7e69f217faa",
+        "android_client_info": {
+          "package_name": "com.example.my_first_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "647148332959-32q1pj91orl93m7uvjavser6dvgu2hpf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcybs8PoapU7ohkWxmCjGFqp0VjUBWvG0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "647148332959-32q1pj91orl93m7uvjavser6dvgu2hpf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
