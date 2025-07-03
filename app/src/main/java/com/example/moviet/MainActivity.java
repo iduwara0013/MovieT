@@ -5,6 +5,9 @@ import android.util.Log;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -17,9 +20,11 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final List<Movie> movieList = new ArrayList<>();         // All movies from Firestore
-    private final List<Movie> nowShowingList = new ArrayList<>();     // Filtered list for Now Showing
-    private final List<Movie> comingSoonList = new ArrayList<>();     // Filtered list for Coming Soon
+    private static final String TAG = "MainActivity";
+
+    private final List<Movie> movieList = new ArrayList<>();
+    private final List<Movie> nowShowingList = new ArrayList<>();
+    private final List<Movie> comingSoonList = new ArrayList<>();
 
     private MovieAdapter adapter;
     private FirebaseFirestore db;
@@ -29,51 +34,55 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Toolbar click dummy
+        // Apply edge-to-edge padding if required
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        // Toolbar click (optional)
         View toolbar = findViewById(R.id.toolbar);
         if (toolbar != null) {
             toolbar.setOnClickListener(v -> {
-                // TODO: Open drawer or menu
+                // TODO: Handle toolbar click
             });
         }
 
-        // Tabs setup
-        TabLayout tabs = findViewById(R.id.tabLayout);
-        tabs.addTab(tabs.newTab().setText("Now Showing"), true);
-        tabs.addTab(tabs.newTab().setText("Coming Soon"));
+        // Setup Tabs
+        TabLayout tabLayout = findViewById(R.id.tabLayout);
+        tabLayout.addTab(tabLayout.newTab().setText("Now Showing"), true);
+        tabLayout.addTab(tabLayout.newTab().setText("Coming Soon"));
 
-        // RecyclerView setup
-        RecyclerView rv = findViewById(R.id.recyclerView);
-        rv.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new MovieAdapter(this, new ArrayList<>()); // start empty list
-        rv.setAdapter(adapter);
+        // Setup RecyclerView
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Firestore instance
+        adapter = new MovieAdapter(this, new ArrayList<>());
+        recyclerView.setAdapter(adapter);
+
+        // Init Firestore
         db = FirebaseFirestore.getInstance();
 
-        // Load movies from Firestore
+        // Load movies
         loadMovies();
 
-        // Tab selection listener to filter movies
-        tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+        // Tab Listener
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                filterMoviesByTab(tab.getPosition());
+                filterMovies(tab.getPosition());
             }
 
             @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-                // no action
-            }
+            public void onTabUnselected(TabLayout.Tab tab) { }
 
             @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-                // no action
-            }
+            public void onTabReselected(TabLayout.Tab tab) { }
         });
     }
 
-    // Load movies from Firestore once
+    /** Load movies from Firestore */
     private void loadMovies() {
         db.collection("Movie")
                 .get()
@@ -83,26 +92,30 @@ public class MainActivity extends AppCompatActivity {
                     comingSoonList.clear();
 
                     for (DocumentSnapshot doc : querySnapshot) {
-                        Movie m = doc.toObject(Movie.class);
-                        if (m != null) {
-                            movieList.add(m);
-                            // Separate into lists by status
-                            if ("now_showing".equalsIgnoreCase(m.getStatus())) {
-                                nowShowingList.add(m);
-                            } else if ("coming_soon".equalsIgnoreCase(m.getStatus())) {
-                                comingSoonList.add(m);
+                        Movie movie = doc.toObject(Movie.class);
+                        if (movie != null) {
+                            movieList.add(movie);
+
+                            String status = movie.getStatus();
+                            if ("now_showing".equalsIgnoreCase(status)) {
+                                nowShowingList.add(movie);
+                            } else if ("coming_soon".equalsIgnoreCase(status)) {
+                                comingSoonList.add(movie);
                             }
                         }
                     }
 
-                    // By default show "Now Showing" movies in adapter
+                    // Show default tab (Now Showing)
                     adapter.updateList(nowShowingList);
+
                 })
-                .addOnFailureListener(e -> Log.e("MainActivity", "Firestore error: ", e));
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to fetch movies from Firestore", e);
+                });
     }
 
-    // Filter movies based on selected tab position
-    private void filterMoviesByTab(int tabPosition) {
+    /** Filter movies based on tab selected */
+    private void filterMovies(int tabPosition) {
         if (tabPosition == 0) {
             adapter.updateList(nowShowingList);
         } else if (tabPosition == 1) {

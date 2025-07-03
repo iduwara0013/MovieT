@@ -1,14 +1,17 @@
 package com.example.moviet;
 
 import android.content.Context;
-import android.util.Log;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -17,9 +20,6 @@ import com.google.firebase.storage.FirebaseStorage;
 
 import java.util.List;
 
-/**
- * RecyclerView adapter to display movie posters and details.
- */
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieVH> {
 
     private final List<Movie> movies;
@@ -34,48 +34,43 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieVH> {
     @NonNull
     @Override
     public MovieVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(context).inflate(R.layout.item_movie, parent, false);
-        return new MovieVH(v);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_movie, parent, false);
+        return new MovieVH(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull MovieVH holder, int position) {
         Movie movie = movies.get(position);
 
-        // Set text views with movie details
         holder.tvTitle.setText(movie.getTitle());
         holder.tvGenreDuration.setText(movie.getGenre() + "\n" + movie.getDuration());
-        holder.tvRating.setText(String.valueOf(movie.getImdb()));
+        holder.tvRating.setText(String.valueOf(movie.getIMDb()));
 
-        // Load movie poster image from Firebase Storage
         String imagePath = movie.getImageurl();
-        Log.d("MovieAdapter", "Loading imagePath: " + imagePath);
 
         if (imagePath != null && !imagePath.isEmpty()) {
             storage.getReference()
                     .child(imagePath)
                     .getDownloadUrl()
-                    .addOnSuccessListener(uri -> {
-                        Log.d("MovieAdapter", "Image URI: " + uri.toString());
-                        Glide.with(context)
-                                .load(uri)
-                                .placeholder(R.drawable.poster_placeholder)
-                                .error(R.drawable.image_error)
-                                .into(holder.imgPoster);
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e("MovieAdapter", "Failed to load image for " + imagePath, e);
-                        holder.imgPoster.setImageResource(R.drawable.image_error);
-                    });
+                    .addOnSuccessListener(uri -> Glide.with(context)
+                            .load(uri)
+                            .placeholder(R.drawable.poster_placeholder)
+                            .error(R.drawable.image_error)
+                            .into(holder.imgPoster))
+                    .addOnFailureListener(e -> holder.imgPoster.setImageResource(R.drawable.image_error));
         } else {
-            Log.w("MovieAdapter", "imagePath is null or empty for movie: " + movie.getTitle());
             holder.imgPoster.setImageResource(R.drawable.image_error);
         }
 
-        // Buy button click listener (optional)
-        holder.btnBuy.setOnClickListener(view -> {
-            // TODO: Implement ticket booking navigation or action here
-            // Example: Toast.makeText(context, "Buying ticket for: " + movie.getTitle(), Toast.LENGTH_SHORT).show();
+        // Buy Ticket
+        holder.btnBuy.setOnClickListener(v -> handleBuyTicket(movie.getTitle()));
+
+        // Navigate to FilmActivity when title is clicked
+        holder.tvTitle.setOnClickListener(v -> {
+            Intent intent = new Intent(context, FilmActivity.class);
+            intent.putExtra("movieTitle", movie.getTitle());
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
         });
     }
 
@@ -84,16 +79,42 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieVH> {
         return movies.size();
     }
 
-    /**
-     * Update the adapter list and refresh the RecyclerView.
-     */
     public void updateList(List<Movie> newMovies) {
         movies.clear();
         movies.addAll(newMovies);
         notifyDataSetChanged();
     }
 
-    /* ViewHolder class */
+    private void handleBuyTicket(String movieTitle) {
+        SharedPreferences prefs = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        String username = prefs.getString("username", null);
+
+        if (username != null && !username.isEmpty()) {
+            prefs.edit().putString("movieTitle", movieTitle).apply();
+            Intent intent = new Intent(context, SeatSelectionActivity.class);
+            intent.putExtra("movieTitle", movieTitle);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setTitle("Login Required")
+                    .setMessage("You are not logged in. Please log in to continue.")
+                    .setPositiveButton("Login", (dialog, which) -> {
+                        Intent intent = new Intent(context, LoginActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(intent);
+                    })
+                    .setNegativeButton("Register", (dialog, which) -> {
+                        Intent intent = new Intent(context, RegisterActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(intent);
+                    })
+                    .setNeutralButton("Cancel", null)
+                    .create()
+                    .show();
+        }
+    }
+
     static class MovieVH extends RecyclerView.ViewHolder {
         ImageView imgPoster, imgStar;
         TextView tvTitle, tvGenreDuration, tvRating;
@@ -101,12 +122,12 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieVH> {
 
         MovieVH(@NonNull View itemView) {
             super(itemView);
-            imgPoster       = itemView.findViewById(R.id.imgPoster);
-            imgStar         = itemView.findViewById(R.id.imgStar);
-            tvTitle         = itemView.findViewById(R.id.tvTitle);
+            imgPoster = itemView.findViewById(R.id.imgPoster);
+            imgStar = itemView.findViewById(R.id.imgStar);
+            tvTitle = itemView.findViewById(R.id.tvTitle);
             tvGenreDuration = itemView.findViewById(R.id.tvGenreDuration);
-            tvRating        = itemView.findViewById(R.id.tvRating);
-            btnBuy          = itemView.findViewById(R.id.btnBuy);
+            tvRating = itemView.findViewById(R.id.tvRating);
+            btnBuy = itemView.findViewById(R.id.btnBuy);
         }
     }
 }
