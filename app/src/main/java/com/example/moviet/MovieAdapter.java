@@ -8,7 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -62,13 +61,14 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieVH> {
             holder.imgPoster.setImageResource(R.drawable.image_error);
         }
 
-        // Buy Ticket
+        // Buy Ticket button click listener
         holder.btnBuy.setOnClickListener(v -> handleBuyTicket(movie.getTitle()));
 
-        // Navigate to FilmActivity when title is clicked
+        // Navigate to FilmDetailsActivity when movie title is clicked
         holder.tvTitle.setOnClickListener(v -> {
-            Intent intent = new Intent(context, FilmActivity.class);
-            intent.putExtra("movieTitle", movie.getTitle());
+            Intent intent = new Intent(context, FilmDetailsActivity.class);
+            // Pass document ID or relevant unique ID for detailed loading
+            intent.putExtra("documentId", movie.getDocumentId());
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
         });
@@ -96,8 +96,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieVH> {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
         } else {
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setTitle("Login Required")
+            new AlertDialog.Builder(context)
+                    .setTitle("Login Required")
                     .setMessage("You are not logged in. Please log in to continue.")
                     .setPositiveButton("Login", (dialog, which) -> {
                         Intent intent = new Intent(context, LoginActivity.class);
@@ -110,7 +110,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieVH> {
                         context.startActivity(intent);
                     })
                     .setNeutralButton("Cancel", null)
-                    .create()
                     .show();
         }
     }

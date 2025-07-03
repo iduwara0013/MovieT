@@ -34,18 +34,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Apply edge-to-edge padding if required
+        // Apply edge-to-edge padding
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        // Toolbar click (optional)
+        // Optional toolbar click
         View toolbar = findViewById(R.id.toolbar);
         if (toolbar != null) {
             toolbar.setOnClickListener(v -> {
-                // TODO: Handle toolbar click
+                // Handle toolbar click if needed
             });
         }
 
@@ -57,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
         // Setup RecyclerView
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
         adapter = new MovieAdapter(this, new ArrayList<>());
         recyclerView.setAdapter(adapter);
 
@@ -94,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
                     for (DocumentSnapshot doc : querySnapshot) {
                         Movie movie = doc.toObject(Movie.class);
                         if (movie != null) {
+                            // 🔷 FIX: Set documentId so FilmDetailsActivity works correctly
+                            movie.setDocumentId(doc.getId());
                             movieList.add(movie);
 
                             String status = movie.getStatus();

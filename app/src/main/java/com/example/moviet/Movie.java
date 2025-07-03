@@ -1,6 +1,10 @@
 package com.example.moviet;
 
-public class Movie {
+import java.io.Serializable;
+
+public class Movie implements Serializable {
+
+    private static final long serialVersionUID = 1L;  // optional but recommended
 
     private String documentId;  // Firestore document ID (not stored in Firestore)
     private String title;
